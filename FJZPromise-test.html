@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+		<meta name="referrer" content="no-referrer" />
+		<title>FJZPromise</title>
+	</head>
+	<body>
+		<div id="app">
+			加载此页面后，全局window对象会挂在一个名为FJZPromise Class
+		</div>
+		<script src="./FJZPromise.js"></script>
+		<script>
+			const p1 = new FJZPromise((resolve, reject) => {
+				setTimeout(() => {
+					resolve(1);
+				}, 2000);
+			})
+				.then(
+					(v) => {
+						console.log(v);
+						return v + 1;
+					},
+					(r) => console.log(r)
+				)
+				.then(
+					(v) => {
+						console.log(v);
+						return {
+							x: 3,
+							then(onfulfill, onreject) {
+								onfulfill(this.x + v);
+							}
+						};
+					},
+					(r) => console.log(r)
+				)
+				.then(
+					(v) => {
+						console.log(v, '------------3');
+						const thenFunc = function() {};
+						thenFunc.x = 5;
+						thenFunc.then = function(onfulfill, onreject) {
+							onfulfill(this.x + v); //10
+						};
+						return thenFunc;
+					},
+					(r) => {
+						console.log(r);
+					}
+				)
+				.then(
+					(v) => {
+						console.log(v);
+						return new FJZPromise((resolve, reject) => {
+							setTimeout(() => {
+								resolve(v + 1);
+							}, 3000);
+						});
+					},
+					(reason) => console.log(reason)
+				)
+				.then(
+					(finalV) => console.log(finalV),
+					(r) => console.log(r)
+				);
+
+			FJZPromise.all([
+				new FJZPromise((resolve, reject) => {
+					setTimeout(() => {
+						resolve(1);
+					}, 1000);
+				}),
+				new FJZPromise((resolve, reject) => {
+					setTimeout(() => {
+						resolve(2);
+					}, 2000);
+				}),
+				new FJZPromise((resolve, reject) => {
+					setTimeout(() => {
+						resolve(3);
+					}, 3000);
+				}),
+				new FJZPromise((resolve, reject) => {
+					setTimeout(() => {
+						resolve(4);
+					}, 4000);
+				})
+			]).then(
+				(v) => {
+					console.log(v);
+				},
+				(reason) => {
+					console.log(reason, '----------reason');
+				}
+			);
+			const p2 = new FJZPromise((resolve, reject) => {
+				setTimeout(() => {
+					reject('reject reason');
+				});
+			})
+				.catch((reason) => {
+					console.log(reason, '------------catch  reason');
+					return 'catch after';
+				})
+				.finally((v) => {
+					console.log(v);
+					return new FJZPromise((resolve, reject) => {
+						setTimeout(() => {
+							reject('finally after reject promise');
+							resolve('finally after resolve promise');
+						}, 1000);
+					});
+				})
+				.then(
+					(v) => console.log(v, '-------resolve'),
+					(reason) => console.log(reason, '----------reject')
+				);
+		</script>
+	</body>
+</html>
